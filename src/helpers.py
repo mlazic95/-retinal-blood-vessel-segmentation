@@ -5,7 +5,7 @@ import random
 from pylab import imread, imshow, imsave, plt
 from skimage.filters import threshold_li
 from skimage.color import rgb2gray
-from skimage import exposure
+from skimage import exposure 
 from enum import Enum
 import matplotlib
 import os
@@ -191,6 +191,7 @@ def histogram_equalization(image):
     image = rgb2gray(image)
     img_eq = exposure.equalize_hist(image)
     return img_eq
+
 
 def get_image_pathes(image, labels, m, n_patches, dataset, mask=None):
     """"""
