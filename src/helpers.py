@@ -5,6 +5,7 @@ import random
 from pylab import imread, imshow, imsave, plt
 from skimage.filters import threshold_li
 from skimage.color import rgb2gray
+from skimage import exposure
 from enum import Enum
 import matplotlib
 import os
@@ -140,17 +141,21 @@ def patches_to_image(patches, indexes, m, image_width, image_height):
         image[x_start:x_end, y_start:y_end] = patches[i]
     return image
 
-'''
+
 def adaptive_equalization(image):
-    image = rgb2gray(image)
-    img_adapteq = exposure.equalize_adapthist(image, clip_limit=0.03)
-    return img_adapteq
+    image = rgb2gray(image)
+    img_adapteq = exposure.equalize_adapthist(image, clip_limit=0.03)
+    return img_adapteq
+
+
 
 def contrast_stretching(image):
-    image = rgb2gray(image)
-    p2, p98 = np.percentile(image, (2, 98))
-    img_rescale = exposure.rescale_intensity(image, in_range=(p2, p98))
-    return img_rescale '''
+    image = rgb2gray(image)
+    p2, p98 = np.percentile(image, (2, 98))
+    img_rescale = exposure.rescale_intensity(image, in_range=(p2, p98))
+    return img_rescale
+
+
 
 
 def get_patches_with_mask(image, labels, m, n_patches, mask, condition_function):
@@ -181,11 +186,11 @@ def get_mask_condition_function(dataset):
             return any(any(col[0] > 0.3 for col in row) for row in mask_patch)
     return mask_condition
 
-'''
+
 def histogram_equalization(image):
-    image = rgb2gray(image)
-    img_eq = exposure.equalize_hist(image)
-    return img_eq '''
+    image = rgb2gray(image)
+    img_eq = exposure.equalize_hist(image)
+    return img_eq
 
 def get_image_pathes(image, labels, m, n_patches, dataset, mask=None):
     """"""
