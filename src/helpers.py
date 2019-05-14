@@ -3,10 +3,10 @@ import numpy as np
 import seaborn as sns
 import random
 from pylab import imread, imshow, imsave, plt
-from skimage.filters import threshold_li
+from skimage.filters import threshold_li, threshold_minimum
 from skimage.color import rgb2gray
 from skimage import exposure 
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, accuracy_score
 from enum import Enum
 import matplotlib
 import os
@@ -75,8 +75,6 @@ def create_chase_mask(image, image_path=None):
         save_image(image_path, mask)
 
 def create_stare_mask(image, image_path=None):
-    from skimage.filters import threshold_minimum
-    from skimage.color import rgb2gray
     im_gray = rgb2gray(image)
     thresh_val = threshold_minimum(im_gray)
     mask = np.where(im_gray > thresh_val, 1, 0)
@@ -209,6 +207,11 @@ def get_image_pathes(image, labels, m, n_patches, dataset, mask=None):
     return
 
 def roc_auc(image, label, mask):
+    masked_image, masked_label = create_image_mask(image, label, mask)
+    score = roc_auc_score(masked_label, masked_image)
+    return score
+
+def create_image_mask(image, label, mask):
     masked_image = []
     masked_label = []
     for x in range(image.shape[0]):
@@ -216,6 +219,9 @@ def roc_auc(image, label, mask):
             if mask[x,y] == 255:
                 masked_image.append(image[x,y])
                 masked_label.append(label[x,y])
-    
-    score = roc_auc_score(masked_label, masked_image)
-    return score
+    return masked_image, masked_label
+
+def accuracy(image, label, mask):
+    masked_image, masked_label = create_image_mask(image, label, mask)
+    acc = accuracy_score(masked_label, masked_image)
+    return acc
