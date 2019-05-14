@@ -6,6 +6,7 @@ from pylab import imread, imshow, imsave, plt
 from skimage.filters import threshold_li
 from skimage.color import rgb2gray
 from skimage import exposure 
+from sklearn.metrics import roc_auc_score
 from enum import Enum
 import matplotlib
 import os
@@ -206,3 +207,15 @@ def get_image_pathes(image, labels, m, n_patches, dataset, mask=None):
             return any(any(col[0] > 0.3 for col in row) for row in mask_patch)
         return get_patches_with_mask(image, labels, m, n_patches, mask, get_mask_condition_function(dataset))
     return
+
+def roc_auc(image, label, mask):
+    masked_image = []
+    masked_label = []
+    for x in range(image.shape[0]):
+        for y in range(image.shape[1]):
+            if mask[x,y] == 255:
+                masked_image.append(image[x,y])
+                masked_label.append(label[x,y])
+    
+    score = roc_auc_score(masked_label, masked_image)
+    return score
