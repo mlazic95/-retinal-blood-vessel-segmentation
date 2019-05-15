@@ -233,8 +233,9 @@ def sensitivity(image, label, mask):
 
 def specificity(image, label, mask):
     masked_image, masked_label = create_image_mask(image, label, mask)
-    tn, fp, fn, tp = confusion_matrix(masked_label, masked_image).ravel()
-    specificity = tn / (tn+fp)
+    returned = confusion_matrix(masked_label, masked_image).ravel()
+    print(returned)
+    #specificity = tn / (tn+fp)
     
 
 
