@@ -6,7 +6,7 @@ from pylab import imread, imshow, imsave, plt
 from skimage.filters import threshold_li, threshold_minimum
 from skimage.color import rgb2gray
 from skimage import exposure 
-from sklearn.metrics import roc_auc_score, accuracy_score
+from sklearn.metrics import roc_auc_score, accuracy_score, recall_score, confusion_matrix
 from enum import Enum
 import matplotlib
 import os
@@ -225,3 +225,22 @@ def accuracy(image, label, mask):
     masked_image, masked_label = create_image_mask(image, label, mask)
     acc = accuracy_score(masked_label, masked_image)
     return acc
+
+def sensitivity(image, label, mask):
+    masked_image, masked_label = create_image_mask(image, label, mask)
+    sens = recall_score(masked_label, masked_image)
+    return sens
+
+def specificity(image, label, mask):
+    masked_image, masked_label = create_image_mask(image, label, mask)
+    tn, fp, fn, tp = confusion_matrix(masked_label, masked_image).ravel()
+    specificity = tn / (tn+fp)
+    
+
+
+    
+    
+    
+    
+    
+    
