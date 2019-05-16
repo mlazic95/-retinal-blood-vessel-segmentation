@@ -247,7 +247,15 @@ def segment_whole_image(image, mask, m, dataset, model):
     mask_condition = get_mask_condition_function(dataset)
     for x in range(image.shape[0]):
         for y in range(image.shape[1]):
-            if image[x][y] == 0 or len(image_prob_map[x][y]) > 0:
+            if mask[x][y] == 0 or len(image_prob_map[x][y]) > 0:
+                continue
+            near_mask = False
+            for i in range(-1, 2):
+                for j in range(-1, 2):
+                    if mask[x + i][y + j] == 0:
+                        near_mask = True
+                        break
+            if near_mask:
                 continue
             patch_result = create_patch_for_pixel(image, (x,y), mask, m, mask_condition)
             if not patch_result:
