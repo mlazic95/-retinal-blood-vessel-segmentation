@@ -237,6 +237,117 @@ def specificity(image, label, mask):
     print(returned)
     #specificity = tn / (tn+fp)
     
+def segment_whole_image(image, mask, m, dataset, model):
+    image = rgb2gray(image)
+    image_prob_map = []
+    for x in range(image.shape[0]):
+        image_prob_map.append([])
+        for y in range(image.shape[1]):
+            image_prob_map[x].append([])
+    mask_condition = get_mask_condition_function(dataset)
+    for x in range(image.shape[0]):
+        for y in range(image.shape[1]):
+            if image[x][y] == 0 or len(image_prob_map[x][y]) > 0:
+                continue
+            patch_result = create_patch_for_pixel(image, (x,y), mask, m, mask_condition)
+            if not patch_result:
+                continue
+            patch_image, patch_direction = patch_result
+            patch_image = patch_image.reshape(1, m, m, 1)
+            y_pred = model.predict(patch_image).reshape(32,32)
+            #y_pred_thr = y_pred.copy()
+            #y_pred_thr[y_pred > 0.5] = 1
+            #y_pred_thr[y_pred <= 0.5] = 0
+            if patch_direction == (1,1):
+                for row in range(m):
+                    for col in range(m):
+                        image_prob_map[x + row][y + col].append(y_pred[row][col])
+            elif patch_direction == (-1,1):
+                for row in range(m - 1, -1, -1):
+                    for col in range(m):
+                        image_prob_map[x + (row - m + 1)][y + col].append(y_pred[row][col])
+            elif patch_direction == (1,-1):
+                for row in range(m):
+                    for col in range(m - 1, -1, -1):
+                        image_prob_map[x + row][y + (col - m + 1)].append(y_pred[row][col])
+            elif patch_direction == (-1,-1):
+                for row in range(m - 1, -1, -1):
+                    for col in range(m - 1, -1, -1):
+                        image_prob_map[x + (row - m + 1)][y + (col - m + 1)].append(y_pred[row][col])
+            '''
+            fig, ax = plt.subplots(1,2, figsize=(20,20))
+            ax[0].imshow(patch_image.reshape(32,32))
+            ax[1].imshow(y_pred_thr)
+            plt.show() '''
+
+    final_image = np.zeros((image.shape[0], image.shape[1]))
+    for x in range(image.shape[0]):
+        for y in range(image.shape[1]):
+            final_image[x][y] = 0 if len(image_prob_map[x][y]) == 0 else sum(image_prob_map[x][y]) / len(image_prob_map[x][y])
+    final_image[final_image > 0.5] = 1
+    final_image[final_image <= 0.5] = 0
+    
+    return final_image
+
+
+def create_patch_for_pixel(image, pixel, mask, m, mask_condition):
+    # Check down-right
+    x_start = pixel[0]
+    x_end = x_start + m
+    y_start = pixel[1]
+    y_end = y_start + m
+    if not (x_start < 0 or y_start < 0 or x_end >= image.shape[0] or y_end >= image.shape[1]):
+        mask_patch = mask[x_start:x_end, y_start:y_end]
+        if not mask_condition(mask_patch):
+            return image[x_start:x_end, y_start:y_end], (1,1)
+
+    # Check down-left
+    x_end = pixel[0] + 1
+    x_start = x_end - m
+    y_start = pixel[1]
+    y_end = y_start + m
+    if not (x_start < 0 or y_start < 0 or x_end >= image.shape[0] or y_end >= image.shape[1]):
+        mask_patch = mask[x_start:x_end, y_start:y_end]
+        if not mask_condition(mask_patch):
+            return image[x_start:x_end, y_start:y_end], (-1,1)
+
+    # Check up-right
+    x_start = pixel[0]
+    x_end = x_start + m
+    y_end = pixel[1] + 1
+    y_start = y_end - m
+    if not (x_start < 0 or y_start < 0 or x_end >= image.shape[0] or y_end >= image.shape[1]):
+        mask_patch = mask[x_start:x_end, y_start:y_end]
+        if not mask_condition(mask_patch):
+            return image[x_start:x_end, y_start:y_end], (1,-1)
+
+    # Check down-left
+    x_end = pixel[0] + 1
+    x_start = x_end - m
+    y_end = pixel[1] + 1
+    y_start = y_end - m
+    if not (x_start < 0 or y_start < 0 or x_end >= image.shape[0] or y_end >= image.shape[1]):
+        mask_patch = mask[x_start:x_end, y_start:y_end]
+        if not mask_condition(mask_patch):
+            return image[x_start:x_end, y_start:y_end], (-1,-1)
+        
+        
+def segment_image(image, mask, model, m, dataset):
+    image = rgb2gray(image)
+    patches, indexes = image_to_non_overlapping_patches(image, mask, m, Dataset.DRIVE)
+    patches = np.array(patches)
+    patches = patches.reshape(patches.shape[0], m, m, 1)
+    y_pred = model.predict(patches).reshape(patches.shape[0], 32,32)
+    y_pred_thr = y_pred.copy()
+    y_pred_thr[y_pred > 0.5] = 1
+    y_pred_thr[y_pred <= 0.5] = 0
+    image = patches_to_image(y_pred_thr, indexes, m, image.shape[0], image.shape[1] )
+    return image    
+
+
+
+
+    
 
 
     
