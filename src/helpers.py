@@ -223,16 +223,22 @@ def create_image_mask(image, label, mask):
     return masked_image, masked_label
 
 def accuracy(image, label, mask):
+    image[image > 0.5] = 1
+    image[image <= 0.5] = 0
     masked_image, masked_label = create_image_mask(image, label, mask)
     acc = accuracy_score(masked_label, masked_image)
     return acc
 
 def sensitivity(image, label, mask):
+    image[image > 0.5] = 1
+    image[image <= 0.5] = 0
     masked_image, masked_label = create_image_mask(image, label, mask)
     sens = recall_score(masked_label, masked_image)
     return sens
 
 def specificity(image, label, mask):
+    image[image > 0.5] = 1
+    image[image <= 0.5] = 0
     masked_image, masked_label = create_image_mask(image, label, mask)
     tn, fp, fn, tp = confusion_matrix(masked_label, masked_image).ravel()
     return tn / (tn + fp)
@@ -292,8 +298,7 @@ def segment_whole_image(image, mask, m, dataset, model):
     for x in range(image.shape[0]):
         for y in range(image.shape[1]):
             final_image[x][y] = 0 if len(image_prob_map[x][y]) == 0 else sum(image_prob_map[x][y]) / len(image_prob_map[x][y])
-    final_image[final_image > 0.5] = 1
-    final_image[final_image <= 0.5] = 0
+            
     
     return final_image
 
