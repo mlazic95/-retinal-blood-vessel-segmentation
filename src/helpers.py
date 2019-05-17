@@ -219,6 +219,7 @@ def create_image_mask(image, label, mask):
             if mask[x,y] == 255:
                 masked_image.append(image[x,y])
                 masked_label.append(label[x,y])
+    masked_label = [1 if x > 0 else 0 for x in masked_label]
     return masked_image, masked_label
 
 def accuracy(image, label, mask):
@@ -233,9 +234,8 @@ def sensitivity(image, label, mask):
 
 def specificity(image, label, mask):
     masked_image, masked_label = create_image_mask(image, label, mask)
-    returned = confusion_matrix(masked_label, masked_image).ravel()
-    print(returned)
-    #specificity = tn / (tn+fp)
+    tn, fp, fn, tp = confusion_matrix(masked_label, masked_image).ravel()
+    return tn / (tn + fp)
     
 def segment_whole_image(image, mask, m, dataset, model):
     image = rgb2gray(image)
